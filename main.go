@@ -6,12 +6,24 @@ import (
 )
 
 func main() {
-	cmd, site := parse(os.Args[1:])
-	var h hosts
-	if err := h.apply(cmd, site); err != nil {
+	if err := run(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func run() error {
+	var h hosts
+	if err := h.read("//etc/hosts"); err != nil {
+		return err
+	}
+
+	cmd, site := parse(os.Args[1:])
+	if err := h.apply(cmd, site); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 const (
