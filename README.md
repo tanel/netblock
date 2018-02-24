@@ -1,6 +1,3 @@
-# netblock
-Minimalist network blocker for productivity purposes
-
 What it does
 ------------
 netblock helps you turn off distracting websites, by redirecting them to localhost (or any other host you choose).
@@ -11,3 +8,25 @@ have blocked amazon.com, you'll see an ugly error message in the browser instead
 How it works
 ------------
 It blocks websites by listing the blocked domains in /etc/hosts file.
+
+How to use it
+-------------
+
+Install
+=======
+go install github.com/tanel/netblock
+
+Block web page
+===============
+
+	netblock amazon.com
+
+Unblock web page
+================
+
+	netblock allow amazon.com
+
+List web pages
+==============
+
+	netblock
