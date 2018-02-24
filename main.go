@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -14,7 +15,7 @@ func main() {
 
 func run() error {
 	var h hosts
-	if err := h.read("//etc/hosts"); err != nil {
+	if err := h.readFile(filepath.Join("/", "etc", "hosts")); err != nil {
 		return err
 	}
 

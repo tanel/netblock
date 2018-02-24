@@ -13,17 +13,30 @@ const (
 )
 
 type hosts struct {
-	sites []string
+	all          []string
+	blockedSites []string
 }
 
-func (h *hosts) read(filename string) error {
+func (h *hosts) readFile(filename string) error {
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
 	}
 
+	h.all = strings.Split(string(b), "\n")
+
+	if err := h.parseBlockedHosts(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *hosts) parseBlockedHosts() error {
+	h.blockedSites = []string{}
+
 	begin, end := false, false
-	for _, s := range strings.Split(string(b), "\n") {
+	for _, s := range h.all {
 		switch s {
 		case sectionBegin:
 			begin = true
@@ -36,7 +49,7 @@ func (h *hosts) read(filename string) error {
 					return fmt.Errorf("2 cols expected, got %d (%s)", len(cols), s)
 				}
 
-				h.sites = append(h.sites, cols[1])
+				h.blockedSites = append(h.blockedSites, cols[1])
 			}
 		}
 	}
@@ -44,7 +57,7 @@ func (h *hosts) read(filename string) error {
 	return nil
 }
 
-func (h *hosts) write(filename string) error {
+func (h *hosts) writeFile(filename string) error {
 	return nil
 }
 
@@ -66,11 +79,11 @@ func (h *hosts) add(site string) error {
 		return errors.New("please specify a site to add")
 	}
 
-	if h.sites == nil {
-		h.sites = []string{}
+	if h.blockedSites == nil {
+		h.blockedSites = []string{}
 	}
 
-	h.sites = append(h.sites, site)
+	h.blockedSites = append(h.blockedSites, site)
 
 	return nil
 }
@@ -81,10 +94,10 @@ func (h *hosts) remove(site string) error {
 	}
 
 	found := false
-	for i, existingSite := range h.sites {
+	for i, existingSite := range h.blockedSites {
 		if existingSite == site {
 			found = true
-			h.sites = append(h.sites[:i], h.sites[i+1:]...)
+			h.blockedSites = append(h.blockedSites[:i], h.blockedSites[i+1:]...)
 			break
 		}
 	}
@@ -97,7 +110,7 @@ func (h *hosts) remove(site string) error {
 }
 
 func (h hosts) list() error {
-	for _, site := range h.sites {
+	for _, site := range h.blockedSites {
 		fmt.Println(site)
 	}
 

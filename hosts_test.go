@@ -19,7 +19,7 @@ func Test_hosts_apply_add_site(t *testing.T) {
 	}
 
 	found := false
-	for _, site := range h.sites {
+	for _, site := range h.blockedSites {
 		if site == "test.com" {
 			found = true
 			break
@@ -46,7 +46,7 @@ func Test_hosts_apply_remove_site(t *testing.T) {
 	}
 
 	found := false
-	for _, site := range h.sites {
+	for _, site := range h.blockedSites {
 		if site == "test.com" {
 			found = true
 			break
@@ -66,32 +66,32 @@ func Test_hosts_apply_list(t *testing.T) {
 	}
 }
 
-func Test_read_nosites(t *testing.T) {
+func Test_readFile_nosites(t *testing.T) {
 	var h hosts
-	if err := h.read(filepath.Join("testdata", "no-sites")); err != nil {
+	if err := h.readFile(filepath.Join("testdata", "no-sites")); err != nil {
 		t.Error(err)
 	}
 
-	if len(h.sites) != 0 {
-		t.Errorf("0 sites expected, got %d", len(h.sites))
+	if len(h.blockedSites) != 0 {
+		t.Errorf("0 sites expected, got %d", len(h.blockedSites))
 	}
 }
 
-func Test_read(t *testing.T) {
+func Test_readFile(t *testing.T) {
 	var h hosts
-	if err := h.read(filepath.Join("testdata", "2-sites")); err != nil {
+	if err := h.readFile(filepath.Join("testdata", "2-sites")); err != nil {
 		t.Error(err)
 	}
 
-	if len(h.sites) != 2 {
-		t.Errorf("2 sites expected, got %d", len(h.sites))
+	if len(h.blockedSites) != 2 {
+		t.Errorf("2 sites expected, got %d", len(h.blockedSites))
 	}
 
-	if h.sites[0] != "test.com" {
-		t.Errorf("unexpected site %s", h.sites[0])
+	if h.blockedSites[0] != "test.com" {
+		t.Errorf("unexpected site %s", h.blockedSites[0])
 	}
 
-	if h.sites[1] != "www.test.com" {
-		t.Errorf("unexpected site %s", h.sites[1])
+	if h.blockedSites[1] != "www.test.com" {
+		t.Errorf("unexpected site %s", h.blockedSites[1])
 	}
 }
