@@ -13,14 +13,14 @@ Install
 Block web page
 --------------
 
-	netblock amazon.com
+	netblock add amazon.com
 
 Unblock web page
 ----------------
 
-	netblock allow amazon.com
+	netblock remove amazon.com
 
 List web pages
 --------------
 
-	netblock
+	netblock list
