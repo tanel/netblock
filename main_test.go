@@ -21,14 +21,14 @@ func Test_parse(t *testing.T) {
 			expectedSite: "",
 		},
 		{
-			args:         []string{cmdAdd, "amazon.com"},
+			args:         []string{cmdAdd, "test.com"},
 			expectedCmd:  cmdAdd,
-			expectedSite: "amazon.com",
+			expectedSite: "test.com",
 		},
 		{
-			args:         []string{cmdRemove, "amazon.com"},
+			args:         []string{cmdRemove, "test.com"},
 			expectedCmd:  cmdRemove,
-			expectedSite: "amazon.com",
+			expectedSite: "test.com",
 		},
 	}
 
