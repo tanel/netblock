@@ -9,21 +9,19 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
+	if err := run("/etc/hosts", os.Args[1:]); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-const filename = "/etc/hosts"
-
-func run() error {
+func run(filename string, args []string) error {
 	lines, err := readFile(filename)
 	if err != nil {
 		return err
 	}
 
-	cmd, site := parseArgs(os.Args[1:])
+	cmd, site := parseArgs(args)
 	result, err := apply(lines, cmd, site)
 	if err != nil {
 		return err
@@ -65,27 +63,27 @@ type line struct {
 	isBlockedSite bool
 }
 
-func host(l line) (string, error) {
-	cols := strings.Split(l.content, "\t")
-	if len(cols) != 2 {
-		return "", fmt.Errorf("2 cols expected, got %d (%s)", len(cols), l.content)
+func host(s string) string {
+	cols := strings.Split(s, "\t")
+	if len(cols) == 2 {
+		return cols[1]
 	}
 
-	return cols[1], nil
+	return ""
 }
 
-func readFile(filename string) ([]line, error) {
+func readFile(filename string) ([]string, error) {
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	return parseLines(strings.Split(string(b), "\n")), nil
+	return strings.Split(string(b), "\n"), nil
 }
 
-func writeFile(filename string, lines []line) error {
-	// FIXME:
-	return nil
+func writeFile(filename string, lines []string) error {
+	s := strings.Join(lines, "\n")
+	return ioutil.WriteFile(filename, []byte(s), 0644)
 }
 
 type visitor func(site string, isBlocked bool)
@@ -108,80 +106,81 @@ func visit(lines []string, callback visitor) {
 	}
 }
 
-func parseLines(all []string) []line {
-	var result []line
-	visit(all, func(s string, isBlocked bool) {
-		result = append(result, line{
-			content:       s,
-			isBlockedSite: isBlocked,
-		})
+func blockedSites(lines []string) []string {
+	var result []string
+	visit(lines, func(s string, isBlocked bool) {
+		if isBlocked {
+			result = append(result, s)
+		}
 	})
+
 	return result
 }
 
-func apply(lines []line, cmd, site string) ([]line, error) {
+func apply(lines []string, cmd, site string) ([]string, error) {
 	switch cmd {
 	case cmdAdd:
 		return add(lines, site)
 	case cmdRemove:
 		return remove(lines, site)
 	case cmdList:
-		return list(lines)
+		list(lines)
+		return lines, nil
 	default:
 		return nil, errors.New("please specify a command: list, add, remove")
 	}
 }
 
-func add(lines []line, site string) ([]line, error) {
+func add(lines []string, site string) ([]string, error) {
 	if site == "" {
 		return nil, errors.New("please specify a site to add")
 	}
 
-	lineToAdd := line{
-		content:       "127.0.0.1\t" + site,
-		isBlockedSite: true,
-	}
-
-	var result []line
+	var result []string
 	added := false
-	for _, l := range lines {
-		if l.isBlockedSite && !added {
-			result = append(result, lineToAdd)
+	duplicate := false
+	visit(lines, func(s string, isBlocked bool) {
+		newLine := "127.0.0.1\t" + site
+
+		if isBlocked && !added {
+			result = append(result, newLine)
 			added = true
 		}
 
-		result = append(result, l)
+		if s == newLine {
+			duplicate = true
+		}
+
+		result = append(result, s)
+	})
+
+	if duplicate {
+		return lines, nil
 	}
 
 	if !added {
-		result = append(result, line{
-			content:       sectionBegin,
-			isBlockedSite: false,
-		})
-		result = append(result, lineToAdd)
-		result = append(result, line{
-			content:       sectionEnd,
-			isBlockedSite: false,
-		})
+		result = append(result, sectionBegin)
+		result = append(result, "127.0.0.1\t"+site)
+		result = append(result, sectionEnd)
 	}
 
 	return result, nil
 }
 
-func remove(lines []line, site string) ([]line, error) {
+func remove(lines []string, site string) ([]string, error) {
 	if site == "" {
 		return nil, errors.New("please specify a site to remove")
 	}
 
-	var result []line
+	var result []string
 	removed := false
-	for _, l := range lines {
-		if l.isBlockedSite && strings.Contains(l.content, site) {
+	visit(lines, func(s string, isBlocked bool) {
+		if isBlocked && strings.Contains(s, site) {
 			removed = true
 		} else {
-			result = append(result, l)
+			result = append(result, s)
 		}
-	}
+	})
 
 	if !removed {
 		return nil, fmt.Errorf("%s not found", site)
@@ -190,12 +189,10 @@ func remove(lines []line, site string) ([]line, error) {
 	return result, nil
 }
 
-func list(lines []line) ([]line, error) {
-	for _, l := range lines {
-		if l.isBlockedSite {
-			fmt.Println(host(l))
+func list(lines []string) {
+	visit(lines, func(s string, isBlocked bool) {
+		if isBlocked {
+			fmt.Println(host(s))
 		}
-	}
-
-	return lines, nil
+	})
 }
