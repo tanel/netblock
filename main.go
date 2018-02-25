@@ -88,13 +88,12 @@ func writeFile(filename string, lines []line) error {
 	return nil
 }
 
-func parseLines(all []string) []line {
-	var result []line
-	begin, end := false, false
-	for _, s := range all {
-		var l line
-		l.content = s
+type visitor func(site string, isBlocked bool)
 
+func visit(lines []string, callback visitor) {
+	begin, end := false, false
+	for _, s := range lines {
+		isBlocked := false
 		switch s {
 		case sectionBegin:
 			begin = true
@@ -102,12 +101,21 @@ func parseLines(all []string) []line {
 		case sectionEnd:
 			end = true
 		default:
-			l.isBlockedSite = begin && !end
+			isBlocked = begin && !end
 		}
 
-		result = append(result, l)
+		callback(s, isBlocked)
 	}
+}
 
+func parseLines(all []string) []line {
+	var result []line
+	visit(all, func(s string, isBlocked bool) {
+		result = append(result, line{
+			content:       s,
+			isBlockedSite: isBlocked,
+		})
+	})
 	return result
 }
 
