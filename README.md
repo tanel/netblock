@@ -13,12 +13,12 @@ Install
 Block web page
 --------------
 
-	netblock add test.com
+	sudo netblock add test.com
 
 Unblock web page
 ----------------
 
-	netblock remove test.com
+	sudo netblock remove test.com
 
 List web pages
 --------------
