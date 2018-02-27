@@ -34,12 +34,6 @@ func run(filename string, args []string) error {
 	return nil
 }
 
-const (
-	cmdAdd    = "add"
-	cmdRemove = "remove"
-	cmdList   = "list"
-)
-
 func parseArgs(args []string) (cmd, site string) {
 	switch len(args) {
 	case 1:
@@ -50,11 +44,6 @@ func parseArgs(args []string) (cmd, site string) {
 		return "", ""
 	}
 }
-
-const (
-	sectionBegin = "# BEGIN section for netblock sites"
-	sectionEnd   = "# END section for netblock sites"
-)
 
 func host(s string) string {
 	cols := strings.Split(s, "\t")
@@ -79,6 +68,11 @@ func writeFile(filename string, lines []string) error {
 	return ioutil.WriteFile(filename, []byte(s), 0644)
 }
 
+const (
+	sectionBegin = "# BEGIN section for netblock sites"
+	sectionEnd   = "# END section for netblock sites"
+)
+
 func blockedSites(lines []string) []string {
 	var result []string
 	blockedSection := false
@@ -95,6 +89,12 @@ func blockedSites(lines []string) []string {
 	return result
 }
 
+const (
+	cmdAdd    = "add"
+	cmdRemove = "remove"
+	cmdList   = "list"
+)
+
 func apply(lines []string, cmd, site string) ([]string, error) {
 	switch cmd {
 	case cmdAdd:
@@ -109,8 +109,6 @@ func apply(lines []string, cmd, site string) ([]string, error) {
 	}
 }
 
-const localhost = "127.0.0.1"
-
 func add(lines []string, site string) ([]string, error) {
 	if site == "" {
 		return nil, errors.New("please specify a site to add")
@@ -123,6 +121,8 @@ func add(lines []string, site string) ([]string, error) {
 
 	return result, nil
 }
+
+const localhost = "127.0.0.1"
 
 func addSite(lines []string, site string) []string {
 	// Find if already exists
