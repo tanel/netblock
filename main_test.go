@@ -103,24 +103,24 @@ func Test_readFile(t *testing.T) {
 		t.Errorf("2 sites expected, got %d", len(sites))
 	}
 
-	if sites[0] != "127.0.0.1\ttest.com" {
+	if sites[0] != localhost+"\ttest.com" {
 		t.Errorf("unexpected site %s", sites[0])
 	}
 
-	if sites[1] != "127.0.0.1\twww.test.com" {
+	if sites[1] != localhost+"\twww.test.com" {
 		t.Errorf("unexpected site %s", sites[1])
 	}
 }
 
 func Test_host(t *testing.T) {
-	result := host("127.0.0.1\twww.test.com")
+	result := host(localhost + "\twww.test.com")
 	if result != "www.test.com" {
 		t.Errorf("expected www.test.com, got %s", result)
 	}
 }
 
 func Test_host_InvalidLine(t *testing.T) {
-	result := host("127.0.0.1 www.test.com")
+	result := host(localhost + " www.test.com")
 	if result != "" {
 		t.Errorf("expected no result, got %s", result)
 	}
@@ -196,7 +196,7 @@ func Test_run_MoreSpecificRemoval(t *testing.T) {
 		t.Errorf("1 site expected after removal, got %d", len(blocked))
 	}
 
-	if blocked[0] != "127.0.0.1\ttest.com" {
+	if blocked[0] != localhost+"\ttest.com" {
 		t.Errorf("unexpected result %s", blocked[0])
 	}
 }
@@ -222,7 +222,7 @@ func Test_run_AddToEmptyFile(t *testing.T) {
 		t.Errorf("1 site expected after adding, got %d", len(blocked))
 	}
 
-	if blocked[0] != "127.0.0.1\twww.test.com" {
+	if blocked[0] != localhost+"\twww.test.com" {
 		t.Errorf("unexpected result %s", blocked[0])
 	}
 }

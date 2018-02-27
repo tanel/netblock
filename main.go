@@ -124,6 +124,8 @@ func apply(lines []string, cmd, site string) ([]string, error) {
 	}
 }
 
+const localhost = "127.0.0.1"
+
 func add(lines []string, site string) ([]string, error) {
 	if site == "" {
 		return nil, errors.New("please specify a site to add")
@@ -133,7 +135,7 @@ func add(lines []string, site string) ([]string, error) {
 	added := false
 	duplicate := false
 	visit(lines, func(s string, isBlocked bool) {
-		newLine := "127.0.0.1\t" + site
+		newLine := localhost + "\t" + site
 
 		if isBlocked && !added {
 			result = append(result, newLine)
@@ -153,7 +155,7 @@ func add(lines []string, site string) ([]string, error) {
 
 	if !added {
 		result = append(result, sectionBegin)
-		result = append(result, "127.0.0.1\t"+site)
+		result = append(result, localhost+"\t"+site)
 		result = append(result, sectionEnd)
 	}
 
