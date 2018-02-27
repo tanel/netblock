@@ -56,11 +56,6 @@ const (
 	sectionEnd   = "# END section for netblock sites"
 )
 
-type line struct {
-	content       string
-	isBlockedSite bool
-}
-
 func host(s string) string {
 	cols := strings.Split(s, "\t")
 	if len(cols) == 2 {
