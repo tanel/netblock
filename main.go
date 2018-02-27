@@ -28,9 +28,7 @@ func run(filename string, args []string) error {
 	}
 
 	if cmd != cmdList {
-		if err := writeFile(filename, result); err != nil {
-			return err
-		}
+		return writeFile(filename, result)
 	}
 
 	return nil

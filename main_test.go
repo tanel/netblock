@@ -157,6 +157,12 @@ func Test_run_Remove(t *testing.T) {
 	}
 }
 
+func Test_run_InvalidFile(t *testing.T) {
+	if err := run("this file does not exist", nil); err == nil {
+		t.Error("error expected")
+	}
+}
+
 func Test_run_RemoveNonExistant(t *testing.T) {
 	example := filepath.Join("testdata", "no-sites")
 	input := filepath.Join("testdata", "output", "testfile")
