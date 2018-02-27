@@ -227,6 +227,32 @@ func Test_run_AddToEmptyFile(t *testing.T) {
 	}
 }
 
+func Test_run_AddMultipleTimes(t *testing.T) {
+	example := filepath.Join("testdata", "no-sites")
+	input := filepath.Join("testdata", "output", "testfile")
+	if err := copy(example, input); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdAdd, "www.test.com"}); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdAdd, "www.test.com"}); err != nil {
+		t.Error(err)
+	}
+
+	result, err := readFile(input)
+	if err != nil {
+		t.Error(err)
+	}
+
+	blocked := blockedSites(result)
+	if len(blocked) != 1 {
+		t.Errorf("1 site expected after adding, got %d", len(blocked))
+	}
+}
+
 func Test_run_AddToNonEmptyFile(t *testing.T) {
 	example := filepath.Join("testdata", "2-sites")
 	input := filepath.Join("testdata", "output", "testfile")
