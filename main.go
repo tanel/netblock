@@ -116,10 +116,19 @@ func add(lines []string, site string) ([]string, error) {
 		return nil, errors.New("please specify a site to add")
 	}
 
+	result := addSite(lines, site)
+	if !strings.HasPrefix(site, "www.") {
+		result = addSite(result, "www."+site)
+	}
+
+	return result, nil
+}
+
+func addSite(lines []string, site string) []string {
 	// Find if already exists
 	for _, s := range lines {
 		if s == localhost+"\t"+site {
-			return lines, nil
+			return lines
 		}
 	}
 
@@ -142,7 +151,7 @@ func add(lines []string, site string) ([]string, error) {
 		result = append(result, sectionEnd)
 	}
 
-	return result, nil
+	return result
 }
 
 func remove(lines []string, site string) ([]string, error) {
@@ -150,9 +159,20 @@ func remove(lines []string, site string) ([]string, error) {
 		return nil, errors.New("please specify a site to remove")
 	}
 
-	var result []string
+	result, removed := removeSite(lines, site)
+	if !removed {
+		return nil, fmt.Errorf("%s not found", site)
+	}
+
+	if !strings.HasPrefix(site, "www.") {
+		result, _ = removeSite(result, "www."+site)
+	}
+
+	return result, nil
+}
+
+func removeSite(lines []string, site string) (result []string, removed bool) {
 	blockedSection := false
-	removed := false
 	for _, s := range lines {
 		if s == sectionBegin {
 			blockedSection = true
@@ -160,7 +180,7 @@ func remove(lines []string, site string) ([]string, error) {
 			blockedSection = false
 		}
 
-		if blockedSection && strings.Contains(s, site) {
+		if blockedSection && s == localhost+"\t"+site {
 			removed = true
 			continue
 		}
@@ -168,11 +188,7 @@ func remove(lines []string, site string) ([]string, error) {
 		result = append(result, s)
 	}
 
-	if !removed {
-		return nil, fmt.Errorf("%s not found", site)
-	}
-
-	return result, nil
+	return result, removed
 }
 
 func list(lines []string) {

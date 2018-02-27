@@ -116,6 +116,24 @@ func copy(source, destination string) error {
 	return ioutil.WriteFile(destination, b, 0644)
 }
 
+func Test_run_InvalidFile(t *testing.T) {
+	if err := run("this file does not exist", nil); err == nil {
+		t.Error("error expected")
+	}
+}
+
+func Test_run_RemoveWithoutArg(t *testing.T) {
+	example := filepath.Join("testdata", "no-sites")
+	input := filepath.Join("testdata", "output", "testfile")
+	if err := copy(example, input); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdRemove}); err == nil {
+		t.Error("error expected")
+	}
+}
+
 func Test_run_Remove(t *testing.T) {
 	example := filepath.Join("testdata", "2-sites")
 	input := filepath.Join("testdata", "output", "testfile")
@@ -138,9 +156,39 @@ func Test_run_Remove(t *testing.T) {
 	}
 }
 
-func Test_run_InvalidFile(t *testing.T) {
-	if err := run("this file does not exist", nil); err == nil {
-		t.Error("error expected")
+func Test_run_RemoveRemovesWWW(t *testing.T) {
+	example := filepath.Join("testdata", "no-sites")
+	input := filepath.Join("testdata", "output", "testfile")
+	if err := copy(example, input); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdAdd, "test.com"}); err != nil {
+		t.Error(err)
+	}
+
+	result, err := readFile(input)
+	if err != nil {
+		t.Error(err)
+	}
+
+	blocked := blockedSites(result)
+	if len(blocked) != 2 {
+		t.Errorf("2 sites expected, got %d", len(blocked))
+	}
+
+	if err := run(input, []string{cmdRemove, "test.com"}); err != nil {
+		t.Error(err)
+	}
+
+	result, err = readFile(input)
+	if err != nil {
+		t.Error(err)
+	}
+
+	blocked = blockedSites(result)
+	if len(blocked) != 0 {
+		t.Errorf("0 sites expected after removal, got %d", len(blocked))
 	}
 }
 
@@ -205,6 +253,36 @@ func Test_run_AddToEmptyFile(t *testing.T) {
 
 	if blocked[0] != localhost+"\twww.test.com" {
 		t.Errorf("unexpected result %s", blocked[0])
+	}
+}
+
+func Test_run_AddAddsWWW(t *testing.T) {
+	example := filepath.Join("testdata", "no-sites")
+	input := filepath.Join("testdata", "output", "testfile")
+	if err := copy(example, input); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdAdd, "test.com"}); err != nil {
+		t.Error(err)
+	}
+
+	result, err := readFile(input)
+	if err != nil {
+		t.Error(err)
+	}
+
+	blocked := blockedSites(result)
+	if len(blocked) != 2 {
+		t.Errorf("2 sites expected after adding, got %d", len(blocked))
+	}
+
+	if blocked[0] != localhost+"\twww.test.com" {
+		t.Errorf("unexpected result %s", blocked[0])
+	}
+
+	if blocked[1] != localhost+"\ttest.com" {
+		t.Errorf("unexpected result %s", blocked[1])
 	}
 }
 
@@ -352,18 +430,6 @@ func Test_run_AddWithoutArg(t *testing.T) {
 	}
 
 	if err := run(input, []string{cmdAdd}); err == nil {
-		t.Error("error expected")
-	}
-}
-
-func Test_run_RemoveWithoutArg(t *testing.T) {
-	example := filepath.Join("testdata", "no-sites")
-	input := filepath.Join("testdata", "output", "testfile")
-	if err := copy(example, input); err != nil {
-		t.Error(err)
-	}
-
-	if err := run(input, []string{cmdRemove}); err == nil {
 		t.Error("error expected")
 	}
 }
