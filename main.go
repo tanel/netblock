@@ -79,33 +79,18 @@ func writeFile(filename string, lines []string) error {
 	return ioutil.WriteFile(filename, []byte(s), 0644)
 }
 
-type visitor func(site string, isBlocked bool)
-
-func visit(lines []string, callback visitor) {
-	begin, end := false, false
-	for _, s := range lines {
-		isBlocked := false
-		switch s {
-		case sectionBegin:
-			begin = true
-			end = false
-		case sectionEnd:
-			end = true
-		default:
-			isBlocked = begin && !end
-		}
-
-		callback(s, isBlocked)
-	}
-}
-
 func blockedSites(lines []string) []string {
 	var result []string
-	visit(lines, func(s string, isBlocked bool) {
-		if isBlocked {
+	blockedSection := false
+	for _, s := range lines {
+		if s == sectionBegin {
+			blockedSection = true
+		} else if s == sectionEnd {
+			blockedSection = false
+		} else if blockedSection {
 			result = append(result, s)
 		}
-	})
+	}
 
 	return result
 }
@@ -131,28 +116,26 @@ func add(lines []string, site string) ([]string, error) {
 		return nil, errors.New("please specify a site to add")
 	}
 
-	var result []string
-	added := false
-	duplicate := false
-	visit(lines, func(s string, isBlocked bool) {
-		newLine := localhost + "\t" + site
-
-		if isBlocked && !added {
-			result = append(result, newLine)
-			added = true
+	// Find if already exists
+	for _, s := range lines {
+		if s == localhost+"\t"+site {
+			return lines, nil
 		}
-
-		if s == newLine {
-			duplicate = true
-		}
-
-		result = append(result, s)
-	})
-
-	if duplicate {
-		return lines, nil
 	}
 
+	// Find a place to insert
+	var result []string
+	added := false
+	for _, s := range lines {
+		result = append(result, s)
+
+		if s == sectionBegin {
+			result = append(result, localhost+"\t"+site)
+			added = true
+		}
+	}
+
+	// Append if not inserted above
 	if !added {
 		result = append(result, sectionBegin)
 		result = append(result, localhost+"\t"+site)
@@ -168,14 +151,22 @@ func remove(lines []string, site string) ([]string, error) {
 	}
 
 	var result []string
+	blockedSection := false
 	removed := false
-	visit(lines, func(s string, isBlocked bool) {
-		if isBlocked && strings.Contains(s, site) {
-			removed = true
-		} else {
-			result = append(result, s)
+	for _, s := range lines {
+		if s == sectionBegin {
+			blockedSection = true
+		} else if s == sectionEnd {
+			blockedSection = false
 		}
-	})
+
+		if blockedSection && strings.Contains(s, site) {
+			removed = true
+			continue
+		}
+
+		result = append(result, s)
+	}
 
 	if !removed {
 		return nil, fmt.Errorf("%s not found", site)
@@ -185,9 +176,7 @@ func remove(lines []string, site string) ([]string, error) {
 }
 
 func list(lines []string) {
-	visit(lines, func(s string, isBlocked bool) {
-		if isBlocked {
-			fmt.Println(host(s))
-		}
-	})
+	for _, s := range blockedSites(lines) {
+		fmt.Println(host(s))
+	}
 }

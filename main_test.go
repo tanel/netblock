@@ -46,25 +46,6 @@ func Test_parseArgs(t *testing.T) {
 	}
 }
 
-func Test_visit(t *testing.T) {
-	host := "test.com"
-
-	lines := []string{
-		host,
-	}
-
-	found := false
-	visit(lines, func(s string, isBlocked bool) {
-		if s == host {
-			found = true
-		}
-	})
-
-	if !found {
-		t.Error("site not found")
-	}
-}
-
 func Test_readFile_NoBlockedSites(t *testing.T) {
 	result, err := readFile(filepath.Join("testdata", "no-sites"))
 	if err != nil {
@@ -245,6 +226,58 @@ func Test_run_AddMultipleTimes(t *testing.T) {
 	result, err := readFile(input)
 	if err != nil {
 		t.Error(err)
+	}
+
+	sections := 0
+	for _, s := range result {
+		if s == sectionBegin {
+			sections++
+		}
+	}
+
+	if sections != 1 {
+		t.Errorf("1 section expected, got %d", sections)
+	}
+
+	blocked := blockedSites(result)
+	if len(blocked) != 1 {
+		t.Errorf("1 site expected after adding, got %d", len(blocked))
+	}
+}
+
+func Test_run_AddRemoveAddCreatesOneSectionOnly(t *testing.T) {
+	example := filepath.Join("testdata", "no-sites")
+	input := filepath.Join("testdata", "output", "testfile")
+	if err := copy(example, input); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdAdd, "www.test.com"}); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdRemove, "www.test.com"}); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdAdd, "www.test.com"}); err != nil {
+		t.Error(err)
+	}
+
+	result, err := readFile(input)
+	if err != nil {
+		t.Error(err)
+	}
+
+	sections := 0
+	for _, s := range result {
+		if s == sectionBegin {
+			sections++
+		}
+	}
+
+	if sections != 1 {
+		t.Errorf("1 section expected, got %d", sections)
 	}
 
 	blocked := blockedSites(result)
