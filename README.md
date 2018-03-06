@@ -1,3 +1,7 @@
+# netblock
+
+[![Build Status](https://travis-ci.org/tanel/netblock.svg?branch=master)](https://travis-ci.org/tanel/netblock) [![Go Report Card](https://goreportcard.com/badge/github.com/tanel/netblock)](https://goreportcard.com/report/github.com/tanel/netblock)
+
 netblock helps you turn off distracting websites, by redirecting them to localhost.
 
 Example: while doing something important, you suddenly feel an urge to visit test.com - don't worry, because you
