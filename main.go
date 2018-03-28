@@ -122,7 +122,7 @@ func add(lines []string, site string) ([]string, error) {
 	return result, nil
 }
 
-const localhost = "127.0.0.1"
+const localhost = "0.0.0.0"
 
 func addSite(lines []string, site string) []string {
 	// Find if already exists

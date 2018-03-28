@@ -9,6 +9,6 @@
 ::1             localhost 
 
 # BEGIN section for netblock sites
-127.0.0.1	test.com
-127.0.0.1	www.test.com
+0.0.0.0	test.com
+0.0.0.0	www.test.com
 # END section for netblock sites
