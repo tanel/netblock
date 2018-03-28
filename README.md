@@ -9,6 +9,10 @@ have blocked test.com, you'll see an ugly error message in the browser instead.
 
 It blocks websites by listing the blocked domains in /etc/hosts file.
 
+PS. Take a look at https://github.com/jmdugan/blocklists for interesting block lists.
+
+Have a nice day, peace out.
+
 Install
 -------
 
