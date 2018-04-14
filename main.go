@@ -36,12 +36,12 @@ func run(filename string, args []string) error {
 
 func parseArgs(args []string) (cmd string, sites []string) {
 	switch len(args) {
+	case 0:
+		return "", nil
 	case 1:
 		return args[0], nil
-	case 2:
-		return args[0], []string{args[1]}
 	default:
-		return "", nil
+		return args[0], args[1:]
 	}
 }
 

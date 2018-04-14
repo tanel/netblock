@@ -28,9 +28,19 @@ func Test_parseArgs(t *testing.T) {
 			expectedSites: []string{"test.com"},
 		},
 		{
+			args:          []string{cmdAdd, "test.com", "something.eu"},
+			expectedCmd:   cmdAdd,
+			expectedSites: []string{"test.com", "something.eu"},
+		},
+		{
 			args:          []string{cmdRemove, "test.com"},
 			expectedCmd:   cmdRemove,
 			expectedSites: []string{"test.com"},
+		},
+		{
+			args:          []string{cmdRemove, "test.com", "something.eu"},
+			expectedCmd:   cmdRemove,
+			expectedSites: []string{"test.com", "something.eu"},
 		},
 	}
 
@@ -156,6 +166,32 @@ func Test_run_Remove(t *testing.T) {
 	}
 }
 
+func Test_run_RemoveMultipleSites(t *testing.T) {
+	example := filepath.Join("testdata", "2-sites")
+	input := filepath.Join("testdata", "output", "testfile")
+	if err := copy(example, input); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdAdd, "another.com"}); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdRemove, "test.com", "another.com"}); err != nil {
+		t.Error(err)
+	}
+
+	result, err := readFile(input)
+	if err != nil {
+		t.Error(err)
+	}
+
+	blocked := blockedSites(result)
+	if len(blocked) != 0 {
+		t.Errorf("0 sites expected after removal, got %d", len(blocked))
+	}
+}
+
 func Test_run_RemoveRemovesWWW(t *testing.T) {
 	example := filepath.Join("testdata", "no-sites")
 	input := filepath.Join("testdata", "output", "testfile")
@@ -253,6 +289,36 @@ func Test_run_AddToEmptyFile(t *testing.T) {
 
 	if blocked[0] != localhost+"\twww.test.com" {
 		t.Errorf("unexpected result %s", blocked[0])
+	}
+}
+
+func Test_run_AddMultipleSites(t *testing.T) {
+	example := filepath.Join("testdata", "no-sites")
+	input := filepath.Join("testdata", "output", "testfile")
+	if err := copy(example, input); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdAdd, "www.test.com", "www.something.eu"}); err != nil {
+		t.Error(err)
+	}
+
+	result, err := readFile(input)
+	if err != nil {
+		t.Error(err)
+	}
+
+	blocked := blockedSites(result)
+	if len(blocked) != 2 {
+		t.Errorf("2 sites expected after adding, got %d", len(blocked))
+	}
+
+	if blocked[0] != localhost+"\twww.something.eu" {
+		t.Errorf("unexpected result %s", blocked[0])
+	}
+
+	if blocked[1] != localhost+"\twww.test.com" {
+		t.Errorf("unexpected result %s", blocked[1])
 	}
 }
 
