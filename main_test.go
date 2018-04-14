@@ -8,40 +8,40 @@ import (
 
 func Test_parseArgs(t *testing.T) {
 	var examples = []struct {
-		args         []string
-		expectedCmd  string
-		expectedSite string
+		args          []string
+		expectedCmd   string
+		expectedSites []string
 	}{
 		{
-			args:         nil,
-			expectedCmd:  "",
-			expectedSite: "",
+			args:          nil,
+			expectedCmd:   "",
+			expectedSites: nil,
 		},
 		{
-			args:         []string{cmdList},
-			expectedCmd:  cmdList,
-			expectedSite: "",
+			args:          []string{cmdList},
+			expectedCmd:   cmdList,
+			expectedSites: nil,
 		},
 		{
-			args:         []string{cmdAdd, "test.com"},
-			expectedCmd:  cmdAdd,
-			expectedSite: "test.com",
+			args:          []string{cmdAdd, "test.com"},
+			expectedCmd:   cmdAdd,
+			expectedSites: []string{"test.com"},
 		},
 		{
-			args:         []string{cmdRemove, "test.com"},
-			expectedCmd:  cmdRemove,
-			expectedSite: "test.com",
+			args:          []string{cmdRemove, "test.com"},
+			expectedCmd:   cmdRemove,
+			expectedSites: []string{"test.com"},
 		},
 	}
 
 	for _, example := range examples {
-		cmd, site := parseArgs(example.args)
+		cmd, sites := parseArgs(example.args)
 		if cmd != example.expectedCmd {
 			t.Errorf("cmd expected %s but got %s", example.expectedCmd, cmd)
 		}
 
-		if site != example.expectedSite {
-			t.Errorf("site expected %s but got %s", example.expectedSite, site)
+		if len(sites) != len(example.expectedSites) {
+			t.Errorf("%d site(s) expected but got %d", len(example.expectedSites), len(sites))
 		}
 	}
 }

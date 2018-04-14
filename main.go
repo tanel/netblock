@@ -21,8 +21,8 @@ func run(filename string, args []string) error {
 		return err
 	}
 
-	cmd, site := parseArgs(args)
-	result, err := apply(lines, cmd, site)
+	cmd, sites := parseArgs(args)
+	result, err := apply(lines, cmd, sites)
 	if err != nil {
 		return err
 	}
@@ -34,14 +34,14 @@ func run(filename string, args []string) error {
 	return nil
 }
 
-func parseArgs(args []string) (cmd, site string) {
+func parseArgs(args []string) (cmd string, sites []string) {
 	switch len(args) {
 	case 1:
-		return args[0], ""
+		return args[0], nil
 	case 2:
-		return args[0], args[1]
+		return args[0], []string{args[1]}
 	default:
-		return "", ""
+		return "", nil
 	}
 }
 
@@ -95,12 +95,12 @@ const (
 	cmdList   = "list"
 )
 
-func apply(lines []string, cmd, site string) ([]string, error) {
+func apply(lines []string, cmd string, sites []string) ([]string, error) {
 	switch cmd {
 	case cmdAdd:
-		return add(lines, site)
+		return add(lines, sites)
 	case cmdRemove:
-		return remove(lines, site)
+		return remove(lines, sites)
 	case cmdList:
 		list(lines)
 		return lines, nil
@@ -109,17 +109,19 @@ func apply(lines []string, cmd, site string) ([]string, error) {
 	}
 }
 
-func add(lines []string, site string) ([]string, error) {
-	if site == "" {
-		return nil, errors.New("please specify a site to add")
+func add(lines []string, sites []string) ([]string, error) {
+	if len(sites) == 0 {
+		return nil, errors.New("please specify site(s) to add")
 	}
 
-	result := addSite(lines, site)
-	if !strings.HasPrefix(site, "www.") {
-		result = addSite(result, "www."+site)
+	for _, site := range sites {
+		lines = addSite(lines, site)
+		if !strings.HasPrefix(site, "www.") {
+			lines = addSite(lines, "www."+site)
+		}
 	}
 
-	return result, nil
+	return lines, nil
 }
 
 const localhost = "0.0.0.0"
@@ -154,21 +156,24 @@ func addSite(lines []string, site string) []string {
 	return result
 }
 
-func remove(lines []string, site string) ([]string, error) {
-	if site == "" {
-		return nil, errors.New("please specify a site to remove")
+func remove(lines []string, sites []string) ([]string, error) {
+	if len(sites) == 0 {
+		return nil, errors.New("please specify site(s) to remove")
 	}
 
-	result, removed := removeSite(lines, site)
-	if !removed {
-		return nil, fmt.Errorf("%s not found", site)
+	for _, site := range sites {
+		var removed bool
+		lines, removed = removeSite(lines, site)
+		if !removed {
+			return nil, fmt.Errorf("%s not found", site)
+		}
+
+		if !strings.HasPrefix(site, "www.") {
+			lines, _ = removeSite(lines, "www."+site)
+		}
 	}
 
-	if !strings.HasPrefix(site, "www.") {
-		result, _ = removeSite(result, "www."+site)
-	}
-
-	return result, nil
+	return lines, nil
 }
 
 func removeSite(lines []string, site string) (result []string, removed bool) {
