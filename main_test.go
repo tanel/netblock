@@ -42,6 +42,16 @@ func Test_parseArgs(t *testing.T) {
 			expectedCmd:   cmdRemove,
 			expectedSites: []string{"test.com", "something.eu"},
 		},
+		{
+			args:          []string{cmdEnable},
+			expectedCmd:   cmdEnable,
+			expectedSites: nil,
+		},
+		{
+			args:          []string{cmdDisable},
+			expectedCmd:   cmdDisable,
+			expectedSites: nil,
+		},
 	}
 
 	for _, example := range examples {
@@ -498,4 +508,72 @@ func Test_run_AddWithoutArg(t *testing.T) {
 	if err := run(input, []string{cmdAdd}); err == nil {
 		t.Error("error expected")
 	}
+}
+
+func Test_run_Disable(t *testing.T) {
+	example := filepath.Join("testdata", "2-sites")
+	input := filepath.Join("testdata", "output", "testfile")
+	if err := copy(example, input); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdDisable}); err != nil {
+		t.Error(err)
+	}
+
+	result, err := readFile(input)
+	if err != nil {
+		t.Error(err)
+	}
+
+	blocked := blockedSites(result)
+	if len(blocked) != 2 {
+		t.Errorf("2 blocked sites expected, got %d", len(blocked))
+		t.FailNow()
+	}
+
+	expected1 := "#0.0.0.0	test.com"
+	if blocked[0] != expected1 {
+		t.Errorf("expected '%s', got '%s'", expected1, blocked[0])
+	}
+
+	expected2 := "#0.0.0.0	www.test.com"
+	if blocked[1] != expected2 {
+		t.Errorf("expected '%s', got '%s'", expected2, blocked[1])
+	}
+
+}
+
+func Test_run_Enable(t *testing.T) {
+	example := filepath.Join("testdata", "2-disabled-sites")
+	input := filepath.Join("testdata", "output", "testfile")
+	if err := copy(example, input); err != nil {
+		t.Error(err)
+	}
+
+	if err := run(input, []string{cmdEnable}); err != nil {
+		t.Error(err)
+	}
+
+	result, err := readFile(input)
+	if err != nil {
+		t.Error(err)
+	}
+
+	blocked := blockedSites(result)
+	if len(blocked) != 2 {
+		t.Errorf("2 blocked sites expected, got %d", len(blocked))
+		t.FailNow()
+	}
+
+	expected1 := "0.0.0.0	test.com"
+	if blocked[0] != expected1 {
+		t.Errorf("expected '%s', got '%s'", expected1, blocked[0])
+	}
+
+	expected2 := "0.0.0.0	www.test.com"
+	if blocked[1] != expected2 {
+		t.Errorf("expected '%s', got '%s'", expected2, blocked[1])
+	}
+
 }

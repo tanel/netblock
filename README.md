@@ -32,3 +32,13 @@ List web pages
 --------------
 
 	netblock list
+
+Disable netblock
+----------------
+
+	sudo netblock disable
+
+Enable netblock
+---------------
+
+	sudo netblock enable

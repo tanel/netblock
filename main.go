@@ -90,9 +90,11 @@ func blockedSites(lines []string) []string {
 }
 
 const (
-	cmdAdd    = "add"
-	cmdRemove = "remove"
-	cmdList   = "list"
+	cmdAdd     = "add"
+	cmdRemove  = "remove"
+	cmdList    = "list"
+	cmdEnable  = "enable"
+	cmdDisable = "disable"
 )
 
 func apply(lines []string, cmd string, sites []string) ([]string, error) {
@@ -104,8 +106,12 @@ func apply(lines []string, cmd string, sites []string) ([]string, error) {
 	case cmdList:
 		list(lines)
 		return lines, nil
+	case cmdEnable:
+		return enable(lines)
+	case cmdDisable:
+		return disable(lines)
 	default:
-		return nil, errors.New("please specify a command: list, add, remove")
+		return nil, errors.New("please specify a command: list, add, remove, enable, disable")
 	}
 }
 
@@ -183,9 +189,7 @@ func removeSite(lines []string, site string) (result []string, removed bool) {
 			blockedSection = true
 		} else if s == sectionEnd {
 			blockedSection = false
-		}
-
-		if blockedSection && s == localhost+"\t"+site {
+		} else if blockedSection && s == localhost+"\t"+site {
 			removed = true
 			continue
 		}
@@ -200,4 +204,39 @@ func list(lines []string) {
 	for _, s := range blockedSites(lines) {
 		fmt.Println(host(s))
 	}
+}
+
+func enable(lines []string) ([]string, error) {
+	blockedSection := false
+	for i, s := range lines {
+		if s == sectionBegin {
+			blockedSection = true
+		} else if s == sectionEnd {
+			blockedSection = false
+		} else if blockedSection && strings.HasPrefix(s, "#") {
+			s = s[1:]
+		}
+
+		lines[i] = s
+	}
+
+	return lines, nil
+}
+
+func disable(lines []string) ([]string, error) {
+	blockedSection := false
+	for i, s := range lines {
+		if s == sectionBegin {
+			blockedSection = true
+		} else if s == sectionEnd {
+			blockedSection = false
+		} else if blockedSection && !strings.HasPrefix(s, "#") {
+			s = "#" + s
+		}
+
+		lines[i] = s
+	}
+
+	return lines, nil
+
 }
